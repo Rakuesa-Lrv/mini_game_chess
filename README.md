@@ -49,13 +49,13 @@ corepack prepare pnpm@12.11.2 --activate
 ```bash
 npm install -g pnpm@12.11.2
 ```
-### 2. 安装依赖
+### 1. 安装依赖
 
 ```bash
 pnpm install
 ```
 
-### 4. 启动 Tauri 桌面端开发模式
+### 2. 启动 Tauri 桌面端开发模式
 
 ```bash
 pnpm tauri dev
@@ -104,6 +104,11 @@ hess/
 ## TODO
 
 ### 未完成
+
+### 问题解决
+
+- [ ] 兵首次移动阻挡异常(issue#1)
+- [ ] 兵的升变与保存棋局联动异常(issue#2)
 
 #### 近期目标
 
