@@ -48,7 +48,7 @@ type ActionType =
 | { type: 'SELECTED', selected: piece['key'] }
 | { type: 'DESELECTED', selected: piece['key'] }
 
-| { type: 'MOVE', to: coor, isPromotion?: boolean}
+| { type: 'MOVE', to: coor, isPromotion?: boolean }
 | { type: 'CASTLING', to: coor }
 
 | { type: 'CAPTURE', to: coor, selected: piece['key'], isPromotion?: boolean }

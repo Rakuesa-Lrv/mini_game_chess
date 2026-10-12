@@ -403,8 +403,8 @@ export const getTarGrids = (piece: piece|undefined, gridList: WritableDraft<grid
     }
     case 'Pawn': {
       const dyF = camp==='white'? -1: 1;
-      addTarPawn(tar, coor, camp, [0, 1*dyF], gridList, { option: 'MOVE' });
-      isFirstMove && addTarPawn(tar, coor, camp, [0, 2*dyF], gridList, { option: 'MOVE' });
+      const isEmpty = addTarPawn(tar, coor, camp, [0, 1*dyF], gridList, { option: 'MOVE' });
+      isEmpty && isFirstMove && addTarPawn(tar, coor, camp, [0, 2*dyF], gridList, { option: 'MOVE' });
 
       const attRng = ( p2AMap('Pawn') as pawnAr )[camp];
       for(const a of attRng) {
