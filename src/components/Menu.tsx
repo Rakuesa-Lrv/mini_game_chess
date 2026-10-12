@@ -41,7 +41,7 @@ const Menu = ()=> {
         className={classes.export}
         onClick={()=> {
           changeDisplay({ type: 'MODAL', name: 'save' })
-          dispatch({ type: 'SAVE' });
+          // dispatch({ type: 'SAVE' });
         }}
       >
         <img draggable='false' src={saveIcon} alt='save' />

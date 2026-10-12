@@ -56,7 +56,6 @@ type ActionType =
 | { type: 'ENPASSANT', to: coor }
 
 | { type: 'LOAD', FEN: string | FENBoard }
-| { type: 'SAVE' }
 ;
 const dspcMove = (draft: WritableDraft<State>, action: Extract<ActionType, { to: coor, isPromotion?: boolean }>)=> {
   const { pieceList, gridList } = draft;
@@ -300,11 +299,6 @@ const useGameStore = create(immer(combine(
             generateStateFromFEN(action.FEN as FENBoard, draft);
             break;
           }
-          // case 'SAVE': {
-          //   const fen = generateFENFromState(current(draft));
-          //   notation.FEN = fen;
-          //   break;
-          // }
         }
         console.log(current(draft).notation);
       })
