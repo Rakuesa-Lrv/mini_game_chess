@@ -2,13 +2,13 @@
 
 import classes from './Menu.module.css';
 
-import saveIcon from '@/assets/chessPiece/save.svg';
-import loadIcon from '@/assets/chessPiece/load.svg';
-import configIcon from '@/assets/chessPiece/config.svg';
+import saveIcon from '@/assets/save.svg';
+import loadIcon from '@/assets/load.svg';
+import configIcon from '@/assets/config.svg';
 
-import useGameStore from '../hooks/stores/useGameStore';
-import { useStoreField } from '../hooks/useStoreField';
-import useDspStore from '../hooks/stores/useDspStore';
+import useGameStore from '@/hooks/stores/useGameStore';
+import { useStoreField } from '@/hooks/useStoreField';
+import useDspStore from '@/hooks/stores/useDspStore';
 
 
 const Menu = ()=> {

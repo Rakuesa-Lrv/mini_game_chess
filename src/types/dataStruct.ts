@@ -1,7 +1,7 @@
 import { type WritableDraft } from 'immer';
 import type { State } from '@/hooks/stores/useGameStore';
 
-export { p2IMap, type pieceName } from '../utils/p2IMap';
+export { p2IMap, type pieceName } from '@/utils/p2IMap';
 import type { FENkey } from './FEN';
 
 const typeN = ['King', 'Queen', 'Rook', 'Bishop', 'Knight', 'Pawn'] as const;

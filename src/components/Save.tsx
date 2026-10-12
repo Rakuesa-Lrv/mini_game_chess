@@ -2,11 +2,11 @@ import classes from './Save.module.css';
 
 import BackDrop from './BackDrop';
 
-import pasteIcon from '@/assets/chessPiece/paste.svg'
+import pasteIcon from '@/assets/paste.svg'
 
-import { useStoreField } from '../hooks/useStoreField';
-import useGameStore from '../hooks/stores/useGameStore';
-import useDspStore from '../hooks/stores/useDspStore';
+import { useStoreField } from '@/hooks/useStoreField';
+import useGameStore from '@/hooks/stores/useGameStore';
+import useDspStore from '@/hooks/stores/useDspStore';
 
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 

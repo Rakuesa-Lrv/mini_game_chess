@@ -5,11 +5,11 @@ import classes from './Load.module.css';
 
 import BackDrop from './BackDrop';
 
-import { isFENValid, notationN, type notation } from '../hooks/FEN';
-import { useStoreField } from '../hooks/useStoreField';
-import useDspStore from '../hooks/stores/useDspStore';
-import useGameStore from '../hooks/stores/useGameStore';
-import { RHFFieldError, newRHFFieldError, pushRHFMultipleFieldErrors } from '../utils/RHFFieldError';
+import { isFENValid, notationN, type notation } from '@/types/FEN';
+import { useStoreField } from '@/hooks/useStoreField';
+import useDspStore from '@/hooks/stores/useDspStore';
+import useGameStore from '@/hooks/stores/useGameStore';
+import { RHFFieldError, newRHFFieldError, pushRHFMultipleFieldErrors } from '@/utils/RHFFieldError';
 
 
 interface Inputs {
