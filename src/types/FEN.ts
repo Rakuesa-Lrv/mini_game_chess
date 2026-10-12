@@ -389,7 +389,6 @@ export const generateStateFromFEN = (fen: FENBoard, draft: WritableDraft<State>)
   }
 
   draft.pieceList = pieceMap;
-  
   draft.gridList = gridList;
   draft.curTar = [] as tar[];
   draft.selected = '';
@@ -400,6 +399,13 @@ export const generateStateFromFEN = (fen: FENBoard, draft: WritableDraft<State>)
 
   draft.halfMove = parseInt(halfMove);
   draft.fullMove = parseInt(fullMove);
+
+  draft.isPromotion = false;
+  draft.notation = {
+    FEN: [fen],
+    LAN: [''],
+    curIdx: 0,
+  };
 };
 
 export const pieceFn2AnMap = {
