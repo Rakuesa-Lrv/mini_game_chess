@@ -82,8 +82,8 @@ hess/
 │   ├── main.tsx         # 前端入口
 │   └── vite-env.d.ts
 ├── src-tauri/           # Tauri 桌面端源码
-│   └── capabilities/    # 配置插件许可
-│       └── default.json
+│   ├── capabilities/    # 配置插件许可
+│   │   └── default.json
 │   ├── icons/           # 图标
 │   ├── src/             # Rust 源码
 │   ├── .gitignore
@@ -98,7 +98,7 @@ hess/
 ├── README.md
 ├── tsconfig.json
 ├── tsconfig.node.json
-├── vite.config.ts
+└── vite.config.ts
 ```
 
 ## TODO
