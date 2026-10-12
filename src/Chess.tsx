@@ -192,7 +192,7 @@ const Chess = ()=> {
       <Menu />
 
       {load.show && <Load /> }
-      {save.show && <Save fen={notation.FEN} /> }
+      {save.show && <Save fen={notation.FEN[notation.curIdx]} /> }
 
     </div>
   )
