@@ -1,0 +1,13 @@
+.backdrop {
+  box-sizing: border-box;
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: rgba(30, 30, 30, .2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}

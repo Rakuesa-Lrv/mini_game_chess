@@ -1,0 +1,27 @@
+.save {
+  background-color: #c5b9df;
+  padding: 1.2rem;
+  border-radius: .2rem;
+  display: grid;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .8rem;
+}
+
+.save>p {
+  width: 100%;
+}
+
+.save>input {
+  width: 60ch;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.save>img {
+  height: 1rem;
+  aspect-ratio: 1/1;
+  cursor: pointer;
+}

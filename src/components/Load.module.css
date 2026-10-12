@@ -1,0 +1,60 @@
+.load {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: #c5b9df;
+  transition: all .2s;
+  padding: 1.2rem;
+  border-radius: .4rem;
+  /* gap: 2rem; */
+}
+
+.loadForm {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: end;
+  gap: .8rem;
+}
+
+.loadForm>input {
+  width: 60ch;
+  font-size: 1rem;
+  border-bottom: #827a94 solid .2rem;
+  background-color: transparent;
+  padding: .2rem;
+}
+
+.loadForm>button {
+  border: .2rem solid #827a94;
+  padding: .2rem .6rem;
+  border-radius: .2rem;
+  width: fit-content;
+}
+
+.errors {
+  background-color: #827a9428;
+  border-radius: .2rem;
+  box-sizing: border-box;
+
+  display: grid;
+  transition: grid-template-rows .5s;
+}
+
+.error {
+  border-bottom: #827a94 solid .1rem;
+}
+
+
+
+.type {
+  color: #bc1389;
+}
+
+.msg {
+  color: #8a107c;
+  padding-left: 2ch;
+}
+.msg::before {
+  content: '·';
+}

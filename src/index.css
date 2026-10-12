@@ -1,0 +1,58 @@
+:root {
+  interpolate-size: allow-keywords;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+body {
+  width: 100vw;
+  height: 100vh;
+  perspective: 800px;
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+a:focus {
+  outline: none;
+}
+
+input,
+button {
+  border: none;
+  background-color: transparent;
+}
+
+input:focus-visible,
+button:focus-visible {
+  outline: none;
+}
+
+button,
+input[type='button'],
+input[type='reset'],
+input[type='submit']
+input[type='checkbox'],
+label:has(
+  >input[type='button'],
+  >input[type='rest'],
+  >input[type='submit'],
+  >input[type='checkbox']
+) {
+  cursor: pointer;
+  user-select: none;
+}
+
+#root {
+  width: fit-content;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
