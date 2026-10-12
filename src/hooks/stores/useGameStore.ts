@@ -7,7 +7,7 @@ import type { piece, grids, tar, camp, enPassant, coor, row, col, type } from '@
 import { gridsInit, getXY, getCoor, getTarGrids, getPiece, getTarCoor, findPieceListKey } from '@/types/dataStruct';
 import { pieceMap, gridListInit  } from '@/types/dataStruct';
 import { type FENBoard, generateFENFromState, generateStateFromFEN } from '@/types/FEN';
-import { pieceFn2AnMap } from '@/types/FEN';
+import { pieceFn2AnMap, INITBoard } from '@/types/FEN';
 import { abbrPiece, LANStep } from '@/types/LAN';
 
 export * from '@/types/dataStruct';
@@ -32,11 +32,18 @@ export interface State {
   halfMove: number,
   fullMove: number,
 
+  isPromotion: boolean, // 妥协
+
   notation: {
-    FEN: string,
-    LAN: LANStep[],
+    FEN: string[],
+    LAN: Array<LANStep | ''>, // 初始化第一步为 '' 方便统一idx
+    curIdx: number,
   }
 }
+
+const stepActionN = ['MOVE', 'CASTLING', 'CAPTURE', 'PROMOTE', 'ENPASSANT'] as const;
+type stepAction = typeof stepActionN[number]
+
 type ActionType = 
 | { type: 'SELECTED', selected: piece['key'] }
 | { type: 'DESELECTED', selected: piece['key'] }
@@ -97,15 +104,26 @@ const dspcNextRound = (draft: WritableDraft<State>)=> {
   draft.enPassant.round || (draft.enPassant.coordinate = undefined);
   draft.delKey!== '' && (delete draft.pieceList[draft.delKey]);
 }
-const nextRound = (draft: WritableDraft<State>, action: Pick<ActionType, 'type'>)=> {
+const nextRound = (draft: WritableDraft<State>, action: Extract<ActionType, { type: stepAction }>)=> {
+  let type: ActionType['type'];
+
+  const fromPromote = action.type==='PROMOTE';
+  fromPromote
+  ? type=action.from
+  : type=action.type;
+
+  const { isPromotion, selected, notation } = draft;
+
+  if(!fromPromote && isPromotion) return;
+
   const { pieceList } = draft;
-  const sel = pieceList[draft.selected];
-  switch(action.type) {
+  const sel = pieceList[selected];
+  switch(type) {
     case 'MOVE': {
       sel.type==='Pawn'? (draft.halfMove=0): draft.halfMove+=1;
       break;
     }
-    case 'CASTLING': {
+    case 'CASTLING': { // LAN.push 在dispatch switch中处理了
       draft.halfMove+=1;
       break;
     }
@@ -119,6 +137,15 @@ const nextRound = (draft: WritableDraft<State>, action: Pick<ActionType, 'type'>
     }
   }
   sel.camp==='black' && (draft.fullMove+=1);
+  notation.FEN.push(generateFENFromState(current(draft)));
+  notation.curIdx+= 1;
+
+  fromPromote && (()=> {
+    draft.curTar = [];
+    notation.LAN[notation.LAN.length-1]+= pieceFn2AnMap[action.promoteTo];
+    draft.isPromotion&&= false;
+  })();
+
   dspcNextRound(draft);
 }
 
@@ -135,16 +162,18 @@ const useGameStore = create(immer(combine(
     halfMove: 0, 
     fullMove: 1,
 
+    isPromotion: false,
+
     notation: {
-      FEN: '',
-      LAN: [],
+      FEN: [INITBoard],
+      LAN: [''],
+      curIdx: 0,
     }
   } as State,
   (set)=> ({
     dispatch: (action: ActionType)=> {      
       set(draft=> {
-        console.log(current(draft.notation.LAN));
-
+        console.log(current(draft).isPromotion);
         const { pieceList, gridList, notation } = draft;
         switch(action.type) {
           case 'SELECTED': {
@@ -162,7 +191,7 @@ const useGameStore = create(immer(combine(
             break;
           }
           case 'MOVE': {
-            const isPmt = action.isPromotion;
+            draft.isPromotion = action.isPromotion ?? false;
 
             const from = pieceList[draft.selected].coordinate;
             const sel = dspcMove(draft, action);
@@ -195,7 +224,7 @@ const useGameStore = create(immer(combine(
               })();
             })();
 
-            isPmt || nextRound(draft, action);
+            nextRound(draft, action);
             break;
           }
           case 'CASTLING': {
@@ -231,22 +260,21 @@ const useGameStore = create(immer(combine(
             break;
           }
           case 'CAPTURE': {
-            const isPmt = action.isPromotion;
+            draft.isPromotion = action.isPromotion ?? false;
 
             move(draft, action);
 
             pieceList[action.selected].isAlive = false; // 动画播放需要
             draft.delKey = action.selected; // 延时删除 保证动画放完
 
-            isPmt || nextRound(draft, action);
+            nextRound(draft, action);
             break;
           }
           case 'PROMOTE': {
             const sel = pieceList[draft.selected];
             sel.type = action.promoteTo;
-            nextRound(draft, { type: action.from });
-            draft.curTar = [];
-            notation.LAN[notation.LAN.length-1]+= pieceFn2AnMap[action.promoteTo];
+            nextRound(draft, action);
+            
 
             break;
           }
@@ -268,15 +296,17 @@ const useGameStore = create(immer(combine(
             break;
           }
           case 'LOAD': {
+            // 一会要改 idx重置
             generateStateFromFEN(action.FEN as FENBoard, draft);
             break;
           }
-          case 'SAVE': {
-            const fen = generateFENFromState(current(draft));
-            notation.FEN = fen;
-            break;
-          }
+          // case 'SAVE': {
+          //   const fen = generateFENFromState(current(draft));
+          //   notation.FEN = fen;
+          //   break;
+          // }
         }
+        console.log(current(draft).notation);
       })
 
       return 1;
