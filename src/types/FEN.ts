@@ -181,9 +181,15 @@ export const isFENValid = (fen: string)=> {
       || psSlice.length>8 && (errors.ps.msg.push(`棋盘行数过多`));
     ;
 
+    // ! 两个都非法只显示第一个 优化error type
     psSlice.forEach((row, idx)=> {
+      (idx===0 && row.includes('P') && turn==='b') && (errors.turn.msg.push(`${rowN[idx]}行有兵未升变 回合未结束`));
+      (idx===7 && row.includes('p') && turn==='w') && (errors.turn.msg.push(`${rowN[idx]}行有兵未升变 回合未结束`));
       (idx===0 && row.includes('p') || idx===7 && row.includes('P')) 
-        && ((errors.ps.msg.push(`${rowN[idx]}处的兵不应位于同色阵地的最内行`)));
+        && (errors.ps.msg.push(`${rowN[idx]}处的兵不应位于同色阵地的最内行`));
+      (idx===0 && row.indexOf('P', row.indexOf('P')+1)>-1
+      || idx===7 && row.indexOf('p', row.indexOf('p')+1)>-1)
+        && (errors.ps.msg.push(`${rowN[idx]}处有多个未升变的兵`))
       rowPsCf(row) || (errors.ps.msg.push('棋盘布局不合法'));
     })
 
@@ -310,6 +316,9 @@ export const generateStateFromFEN = (fen: FENBoard, draft: WritableDraft<State>)
   const pieceList: piece[] = [];
   const pieceMap = {} as Record<piece['key'], piece>;
   const gridList = {} as grids;
+  const promotion = {
+    isPromotion: false,
+  } as State['promotion'];
 
   ps.split('/').forEach((row, idx)=> {
     if(!rowPsCf(row)) throw TypeError;
@@ -322,6 +331,7 @@ export const generateStateFromFEN = (fen: FENBoard, draft: WritableDraft<State>)
         cIdx+= c;
       }else { // NaN
         const pieceCT = FENP2StP(p as rowP);
+
         const cC = colN[cIdx] as col;
         pieceCT && 
         (pieceList.push({
@@ -349,7 +359,7 @@ export const generateStateFromFEN = (fen: FENBoard, draft: WritableDraft<State>)
       })();
     }
 
-    for(const r of [7,2]) {
+    for(const r of ['7', '2'] as const) {
       for(const c of colN) {
         const p = pieceMap[`im_f_FEN_s_${c}${r}`];
         p?.type === 'Pawn' && (p.isFirstMove= true);
@@ -388,10 +398,21 @@ export const generateStateFromFEN = (fen: FENBoard, draft: WritableDraft<State>)
     enP.round = 1; // 有ePTar说明已经走完了首次2格 直接到了对手回合 round: 1即可
   }
 
+  for(const [row, tarCamp] of [['8', 'white'], ['1', 'black']] as const) {
+    for(const col of colN) {
+      const coor = `${col}${row}` as coor;
+      const p = gridList[coor];
+      (p.type==='Pawn' && p.camp===tarCamp) && (()=> {
+        promotion.isPromotion||= true;
+        promotion.coor= coor;
+      })();
+    }
+  }
+
   draft.pieceList = pieceMap;
   draft.gridList = gridList;
-  draft.curTar = [] as tar[];
-  draft.selected = '';
+  draft.curTar = promotion.isPromotion? [{ coordinate: promotion.coor, type: 'self', isPromotion: promotion.isPromotion }] as tar[]: [] as tar[];
+  draft.selected = (promotion.coor && gridList[promotion.coor].key) ?? '';
   draft.turn = camp;
   draft.enPassant = enP;
   draft.checkMate = undefined;
@@ -400,7 +421,9 @@ export const generateStateFromFEN = (fen: FENBoard, draft: WritableDraft<State>)
   draft.halfMove = parseInt(halfMove);
   draft.fullMove = parseInt(fullMove);
 
-  draft.isPromotion = false;
+  draft.promotion = promotion;
+  console.log(draft.promotion);
+
   draft.notation = {
     FEN: [fen],
     LAN: [''],

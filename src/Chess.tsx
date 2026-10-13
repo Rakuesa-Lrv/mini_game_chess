@@ -17,11 +17,11 @@ const getPos = (coordinate: coor)=> {
 }
 
 const Chess = ()=> {
-  const { pieceList, curTar, selected, turn, halfMove, fullMove, notation, dispatch } = useStoreField(useGameStore, [
-    'pieceList', 'curTar', 'selected', 'turn', 'halfMove', 'fullMove', 'notation','dispatch'
+  const { pieceList, curTar, selected, turn, halfMove, fullMove, notation, promotion: promote ,dispatch } = useStoreField(useGameStore, [
+    'pieceList', 'curTar', 'selected', 'turn', 'halfMove', 'fullMove', 'notation', 'promotion' ,'dispatch'
   ]);
-  const { config, load, save, promotion, changeDisplay } = useStoreField(useDspStore, [
-    'config', 'load', 'save', 'promotion', 'changeDisplay'
+  const { config, load, save, changeDisplay } = useStoreField(useDspStore, [
+    'config', 'load', 'save', 'changeDisplay'
   ])
 
   return (
@@ -80,13 +80,12 @@ const Chess = ()=> {
                   data-selected={isSelected}
                   style={getPos(item.coordinate)}
                   data-hidden={!item.isAlive}
-                  data-selectable={item.isAlive && !promotion.show && (turn===item.camp || isCapture )}
+                  data-selectable={item.isAlive && !isPtm && (turn===item.camp || isCapture )}
 
                   onMouseDown={()=> {
-                    item.isAlive && !promotion.show && (()=> {
+                    item.isAlive && !isPtm && (()=> {
                       if(isCapture) {
-                        dispatch({ type: 'CAPTURE', to: item.coordinate, selected: key, isPromotion: isPtm });
-                        isPtm && changeDisplay({ type: 'MODAL', name: 'promotion', coor: item.coordinate });
+                        dispatch({ type: 'CAPTURE', to: item.coordinate, selected: key, promotion: { isPromotion: isPtm, from: 'CAPTURE'} });
                         return;
                       }
                       if(turn!==item.camp) return;
@@ -119,9 +118,7 @@ const Chess = ()=> {
                         dispatch({ type: 'ENPASSANT', to: item.coordinate });
                         break;
                       case 'allowed':
-                        dispatch({ type: 'MOVE', to: item.coordinate, isPromotion: item.isPromotion });
-                        item.isPromotion && changeDisplay({ type: 'MODAL', name: 'promotion', coor: item.coordinate, from: 'MOVE' });
-
+                        dispatch({ type: 'MOVE', to: item.coordinate, promotion: { isPromotion: item.isPromotion ?? false, from: 'MOVE'} });
                         break;
                       case 'castling':
                         dispatch({ type: 'CASTLING', to: item.coordinate });
@@ -136,12 +133,12 @@ const Chess = ()=> {
 
           </div>
 
-          {promotion.show &&
+          {promote.isPromotion &&
           (<div
             className={classes.promotion}
             data-camp={turn}
             style={{
-              left: promotion.coor && getPos(promotion.coor).left
+              left: promote.coor && getPos(promote.coor).left
             }}
           >
             {
@@ -153,8 +150,7 @@ const Chess = ()=> {
                   <div
                     className={classes.piece}
                     onClick={()=> {
-                      dispatch({ type: 'PROMOTE', promoteTo: p, from: promotion.from! })
-                      changeDisplay({ type: 'CLOSE', name: 'promotion' });
+                      dispatch({ type: 'PROMOTE', promoteTo: p })
                     }}
                   >
                     <img draggable='false' src={p2IMap(`${turn}${p}`)} alt={`${turn}${p}`} />

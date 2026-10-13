@@ -32,7 +32,11 @@ export interface State {
   halfMove: number,
   fullMove: number,
 
-  isPromotion: boolean, // 妥协
+  promotion: {
+    isPromotion: boolean
+    coor: coor | undefined,
+    from: 'MOVE' | 'CAPTURE' | undefined
+  },
 
   notation: {
     FEN: string[],
@@ -48,16 +52,16 @@ type ActionType =
 | { type: 'SELECTED', selected: piece['key'] }
 | { type: 'DESELECTED', selected: piece['key'] }
 
-| { type: 'MOVE', to: coor, isPromotion?: boolean }
+| { type: 'MOVE', to: coor, promotion?: { isPromotion: boolean, from: 'MOVE' } }
 | { type: 'CASTLING', to: coor }
 
-| { type: 'CAPTURE', to: coor, selected: piece['key'], isPromotion?: boolean }
-| { type: 'PROMOTE', promoteTo: type, from: 'MOVE'|'CAPTURE' }
+| { type: 'CAPTURE', to: coor, selected: piece['key'], promotion?: { isPromotion: boolean, from: 'CAPTURE' } }
+| { type: 'PROMOTE', promoteTo: type }
 | { type: 'ENPASSANT', to: coor }
 
 | { type: 'LOAD', FEN: string | FENBoard }
 ;
-const dspcMove = (draft: WritableDraft<State>, action: Extract<ActionType, { to: coor, isPromotion?: boolean }>)=> {
+const dspcMove = (draft: WritableDraft<State>, action: Extract<ActionType, { to: coor, isPromotion?: { isPromotion: boolean, from: 'MOVE' | 'CAPTURE' } }>)=> {
   const { pieceList, gridList } = draft;
   const sel = pieceList[draft.selected]; // selected piece
 
@@ -68,8 +72,11 @@ const dspcMove = (draft: WritableDraft<State>, action: Extract<ActionType, { to:
   draft.curTar = [];
 
   ((action.type==='CAPTURE' || action.type==='MOVE' )
-  && action.isPromotion)
-  && draft.curTar.push({ coordinate: action.to, type: 'self' })
+  && action.promotion?.isPromotion)
+  && draft.curTar.push({ coordinate: action.to, type: 'self', isPromotion: action.promotion?.isPromotion })
+
+  console.log(current(draft).curTar);
+  
 
   gridList[action.to] = sel; // update piece after move
 
@@ -107,22 +114,25 @@ const nextRound = (draft: WritableDraft<State>, action: Extract<ActionType, { ty
   let type: ActionType['type'];
 
   const fromPromote = action.type==='PROMOTE';
-  fromPromote
-  ? type=action.from
-  : type=action.type;
+  (fromPromote && draft.promotion.from)
+  ? type = draft.promotion.from
+  : type = action.type;
 
-  const { isPromotion, selected, notation } = draft;
+  const { promotion, selected, pieceList, notation } = draft;
+  if(!fromPromote && promotion.isPromotion) { // ([type='MOVE'] || [type='CAPTURE']) && [isPromotion=true] 不换回合
+    notation.FEN.push(generateFENFromState(current(draft)));
+    notation.curIdx+= 1; // push就+=1 升变的修改不变 保证正确记录长度 便于统一处理
+    return;
+  };
 
-  if(!fromPromote && isPromotion) return;
-
-  const { pieceList } = draft;
   const sel = pieceList[selected];
   switch(type) {
     case 'MOVE': {
-      sel.type==='Pawn'? (draft.halfMove=0): draft.halfMove+=1;
+      (sel.type==='Pawn' || fromPromote) // 移动是升变前发生的 halfMove清空
+        ? (draft.halfMove=0): draft.halfMove+=1;
       break;
     }
-    case 'CASTLING': { // LAN.push 在dispatch switch中处理了
+    case 'CASTLING': {
       draft.halfMove+=1;
       break;
     }
@@ -136,14 +146,18 @@ const nextRound = (draft: WritableDraft<State>, action: Extract<ActionType, { ty
     }
   }
   sel.camp==='black' && (draft.fullMove+=1);
-  notation.FEN.push(generateFENFromState(current(draft)));
-  notation.curIdx+= 1;
 
-  fromPromote && (()=> {
+  fromPromote? (()=> {
     draft.curTar = [];
     notation.LAN[notation.LAN.length-1]+= pieceFn2AnMap[action.promoteTo];
-    draft.isPromotion&&= false;
+    draft.promotion.isPromotion&&= false;
+    notation.FEN[notation.FEN.length-1] = generateFENFromState(current(draft));
+  })()
+  : (()=> {
+    notation.FEN.push(generateFENFromState(current(draft)));
+    notation.curIdx+= 1;
   })();
+
 
   dspcNextRound(draft);
 }
@@ -161,7 +175,7 @@ const useGameStore = create(immer(combine(
     halfMove: 0, 
     fullMove: 1,
 
-    isPromotion: false,
+    promotion: { isPromotion: false, coor: undefined, from: undefined},
 
     notation: {
       FEN: [INITBoard],
@@ -172,8 +186,8 @@ const useGameStore = create(immer(combine(
   (set)=> ({
     dispatch: (action: ActionType)=> {      
       set(draft=> {
-        console.log(current(draft).isPromotion);
-        const { pieceList, gridList, notation } = draft;
+        
+        const { pieceList, gridList, notation, promotion } = draft;
         switch(action.type) {
           case 'SELECTED': {
             draft.selected = action.selected;
@@ -190,15 +204,10 @@ const useGameStore = create(immer(combine(
             break;
           }
           case 'MOVE': {
-            draft.isPromotion = action.isPromotion ?? false;
-
-            const from = pieceList[draft.selected].coordinate;
-            const sel = dspcMove(draft, action);
-            const to = sel.coordinate;
-            let piece = '' as abbrPiece;
-            sel.type==='Pawn' || (piece = pieceFn2AnMap[sel.type] as abbrPiece);
-            notation.LAN.push(`${piece}${from}-${to}`);
-            // notation.LAN[notation.LAN.length-1]+= 'Q';
+            promotion.isPromotion = action.promotion?.isPromotion ?? false;
+            promotion.from = action.promotion?.from;
+            const sel = move(draft, action);
+            draft.promotion.isPromotion && (promotion.coor = sel.coordinate);
 
             sel.isFirstMove && (()=> {
               sel.isFirstMove&&= false;
@@ -259,9 +268,10 @@ const useGameStore = create(immer(combine(
             break;
           }
           case 'CAPTURE': {
-            draft.isPromotion = action.isPromotion ?? false;
-
-            move(draft, action);
+            draft.promotion.isPromotion = action.promotion?.isPromotion ?? false;
+            promotion.from = action.promotion?.from;
+            const sel = move(draft, action);
+            draft.promotion.isPromotion && (promotion.coor = sel.coordinate);
 
             pieceList[action.selected].isAlive = false; // 动画播放需要
             draft.delKey = action.selected; // 延时删除 保证动画放完
@@ -270,10 +280,11 @@ const useGameStore = create(immer(combine(
             break;
           }
           case 'PROMOTE': {
-            const sel = pieceList[draft.selected];
-            sel.type = action.promoteTo;
-            nextRound(draft, action);
+            const sel = pieceList[draft.selected]; // sel并不能随便用 move返回的sel是已经交给gridList了的
+            sel.type = sel.type.replace(sel.type, action.promoteTo) as type;
+            gridList[sel.coordinate] = sel; 
             
+            nextRound(draft, action);
 
             break;
           }
@@ -295,11 +306,11 @@ const useGameStore = create(immer(combine(
             break;
           }
           case 'LOAD': {
-            // 一会要改 idx重置
             generateStateFromFEN(action.FEN as FENBoard, draft);
             break;
           }
         }
+        // console.log(current(draft).isPromotion);
         console.log(current(draft).notation);
       })
 
