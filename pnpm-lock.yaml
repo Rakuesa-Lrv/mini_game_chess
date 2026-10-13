@@ -197,9 +197,6 @@ importers:
       '@tauri-apps/cli':
         specifier: ^2
         version: 2.12.2
-      '@types/node':
-        specifier: ^26.6.4
-        version: 26.6.5
       '@types/react':
         specifier: ^19.1.8
         version: 19.3.0
@@ -767,6 +764,7 @@ snapshots:
   '@types/node@26.6.5':
     dependencies:
       undici-types: 8.9.0
+    optional: true
 
   '@types/react-dom@19.3.0(@types/react@19.3.0)':
     dependencies:
@@ -900,7 +898,8 @@ snapshots:
 
   typescript@6.0.3: {}
 
-  undici-types@8.9.0: {}
+  undici-types@8.9.0:
+    optional: true
 
   use-immer@0.11.0(immer@11.1.21)(react@19.3.0):
     dependencies:
