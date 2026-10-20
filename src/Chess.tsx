@@ -17,8 +17,9 @@ const getPos = (coordinate: coor)=> {
 }
 
 const Chess = ()=> {
-  const { pieceList, curTar, selected, turn, halfMove, fullMove, notation, promotion: promote ,dispatch } = useStoreField(useGameStore, [
-    'pieceList', 'curTar', 'selected', 'turn', 'halfMove', 'fullMove', 'notation', 'promotion' ,'dispatch'
+  const { pieceList, curTar, selected, turn, halfMove, fullMove, notation, promotion: promote, dispatch } = useStoreField(useGameStore, [
+    'pieceList', 'curTar', 'selected', 'turn', 'halfMove', 'fullMove', 'notation', 'promotion'
+    ,'dispatch'
   ]);
   const { config, load, save, changeDisplay } = useStoreField(useDspStore, [
     'config', 'load', 'save', 'changeDisplay'
@@ -73,17 +74,24 @@ const Chess = ()=> {
               ))>-1;
 
               return (
-                (<div
+                <div
                   id={key}
                   key={key}
                   className={classes.piece}
                   data-selected={isSelected}
-                  style={getPos(item.coordinate)}
-                  data-hidden={!item.isAlive}
-                  data-selectable={item.isAlive && !isPtm && (turn===item.camp || isCapture )}
+                  style={
+                    item.discardIdx===-1? getPos(item.coordinate): {
+                      top: `calc(${item.camp==='white'? '30%': '70%'}${Math.floor(item.discardIdx/8) ? '+ var(--gridSize) * .5': ''})`,
+                      left: `calc(100% + var(--gridSize) * ${1.3 + item.discardIdx%8 *.5})`,
+                      transform: `translateX(-50%) translateY(-50%)`
+                    }
+                  }
+                  data-hidden={item.discardIdx}
+                  data-selectable={item.discardIdx===-1 && !isPtm && (turn===item.camp || isCapture )}
 
                   onMouseDown={()=> {
-                    item.isAlive && !isPtm && (()=> {
+                    item.discardIdx===-1 
+                    && !isPtm && (()=> {
                       if(isCapture) {
                         dispatch({ type: 'CAPTURE', to: item.coordinate, selected: key, promotion: { isPromotion: isPtm, from: 'CAPTURE'} });
                         return;
@@ -93,14 +101,12 @@ const Chess = ()=> {
                         dispatch({ type: 'DESELECTED', selected: key });
                       }else {
                         dispatch({ type: 'SELECTED', selected: key });
-
                       }
-                    })();
-
+                    })()
                   }}
                 >
                   <img draggable='false' src={p2IMap(name)} alt={name} />
-                </div>)
+                </div>
               )
             })}
 
@@ -183,6 +189,7 @@ const Chess = ()=> {
         <div>
           全回合计数: {fullMove}
         </div>
+
       </div>
 
       <Menu />

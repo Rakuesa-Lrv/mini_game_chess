@@ -4,7 +4,7 @@ import { combine } from 'zustand/middleware';
 import { current, type WritableDraft } from 'immer';
 
 import type { piece, grids, tar, camp, enPassant, coor, row, col, type } from '@/types/dataStruct';
-import { gridsInit, getXY, getCoor, getTarGrids, getPiece, getTarCoor, findPieceListKey } from '@/types/dataStruct';
+import { gridsInit, getXY, getCoor, getTarGrids, getPiece, getTarCoor, findPieceListKey, getEnemy } from '@/types/dataStruct';
 import { pieceMap, gridListInit  } from '@/types/dataStruct';
 import { type FENBoard, generateFENFromState, generateStateFromFEN } from '@/types/FEN';
 import { pieceFn2AnMap, INITBoard } from '@/types/FEN';
@@ -16,10 +16,14 @@ export interface State {
   pieceList: Record<piece['key'], piece>,
   gridList: grids,
 
+  discardIdx: {
+    white: number,
+    black: number,
+  },
+
   curTar: tar[];
 
   selected: piece['key'] | '',
-  // 会导致映射里['']===undefined 以后可以用来存储元信息
 
   turn: camp,
 
@@ -108,7 +112,7 @@ const dspcNextRound = (draft: WritableDraft<State>)=> {
   draft.turn==='white'? draft.turn='black': draft.turn='white';
   draft.enPassant.round && (draft.enPassant.round-=1);
   draft.enPassant.round || (draft.enPassant.coordinate = undefined);
-  draft.delKey!== '' && (delete draft.pieceList[draft.delKey]);
+  // draft.delKey!== '' && (draft.discardList[draft.turn].push(draft.pieceList[draft.delKey]));
 }
 const nextRound = (draft: WritableDraft<State>, action: Extract<ActionType, { type: stepAction }>)=> {
   let type: ActionType['type'];
@@ -161,11 +165,18 @@ const nextRound = (draft: WritableDraft<State>, action: Extract<ActionType, { ty
 
   dspcNextRound(draft);
 }
+// const discard = (draft: WritableDraft<State>)=> {
+//   draft.discardList
+// }
 
 const useGameStore = create(immer(combine(
   {
     pieceList: pieceMap, // only update without changing the order
     gridList: gridListInit,
+    discardIdx: {
+      white: 0,
+      black: 0,
+    },
     curTar: [] as tar[],
     selected: '', // piece.key
     turn: 'white',
@@ -270,11 +281,14 @@ const useGameStore = create(immer(combine(
           case 'CAPTURE': {
             draft.promotion.isPromotion = action.promotion?.isPromotion ?? false;
             promotion.from = action.promotion?.from;
+
             const sel = move(draft, action);
             draft.promotion.isPromotion && (promotion.coor = sel.coordinate);
 
-            pieceList[action.selected].isAlive = false; // 动画播放需要
-            draft.delKey = action.selected; // 延时删除 保证动画放完
+            const dcP = pieceList[action.selected];
+            dcP.discardIdx = draft.discardIdx[dcP.camp]; // 动画播放需要
+            draft.discardIdx[dcP.camp]+=1;
+            // draft.delKey = action.selected; // 延时删除 保证动画放完
 
             nextRound(draft, action);
             break;
@@ -297,8 +311,10 @@ const useGameStore = create(immer(combine(
 
             const delKey = findPieceListKey(pieceList, enTarCoor);
 
-            pieceList[delKey].isAlive = false; 
-            draft.delKey = delKey; 
+            const dcP = pieceList[delKey];
+            dcP.discardIdx = draft.discardIdx[dcP.camp]; // 动画播放需要
+            draft.discardIdx[dcP.camp]+=1;
+            // draft.delKey = action.selected; // 延时删除 保证动画放完
 
             gridList[enTarCoor] = gridsInit(enTarCoor);
 

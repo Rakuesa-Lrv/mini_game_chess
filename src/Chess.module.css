@@ -137,6 +137,7 @@
 
 .pieces {
   width: calc(8 * (var(--gridSize)));
+  aspect-ratio: 1/1;
   position: absolute;
   top: 0;
   left: 0;
@@ -187,9 +188,14 @@
   animation: piece-hidden .6s linear forwards;
 }
 
-/* .info {
-
-} */
+.info {
+  position: relative;
+  width: calc(4 * (var(--gridSize)));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
 
 .turn {
   display: flex;
@@ -238,8 +244,14 @@
   left: 50%;
 }
 [data-camp='black']>.arrow {
-  
   top: -1.15rem;
   left: 50%;
   transform: translateX(-50%) rotateZ(180deg);
+}
+
+.discard {
+  width: 100%;
+  height: 4rem;
+  background-color: #bfa;
+  position: absolute;
 }

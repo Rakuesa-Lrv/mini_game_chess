@@ -8,7 +8,9 @@ const typeN = ['King', 'Queen', 'Rook', 'Bishop', 'Knight', 'Pawn'] as const;
 export type type = typeof typeN[number];
 const campN = ['white', 'black'] as const;
 export type camp = typeof campN[number];
-
+export const getEnemy = (camp: camp): camp=> (
+  camp==='black'? 'white': 'black'
+)
 
 export const colN = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] as const;
 export type col = typeof colN[number];
@@ -44,11 +46,12 @@ export interface piece {
 
   isFirstMove?: boolean | undefined, // for Pawn, king and knight
 
-  isAlive: boolean,
+  // isAlive: boolean,
+  discardIdx: number,
 }
 type spPiece = Pick<piece, 'coordinate'> & Partial< Omit<piece, 'coordinate'> >;
 
-const piecesTemp: (Omit<piece, 'key' | 'isAlive'> & Partial< Pick<piece, 'key'| 'isAlive'> >)[] = [];
+const piecesTemp: (Omit<piece, 'key' | 'discardIdx'> & Partial< Pick<piece, 'key'| 'discardIdx'> >)[] = [];
 ;(()=> {
   const ori_order: type[] = ['Rook', 'Knight', 'Bishop', 'Queen', 'King', 'Bishop', 'Knight', 'Rook'] as const;
   ori_order.forEach((piece,idx)=> {
@@ -87,7 +90,7 @@ const piecesTemp: (Omit<piece, 'key' | 'isAlive'> & Partial< Pick<piece, 'key'| 
     (piece.type==='Pawn' || piece.type==='King' || piece.type==='Rook')
     ? (piece.isFirstMove = true)
     : (piece.isFirstMove = undefined);
-    piece.isAlive = true;
+    piece.discardIdx = -1;
   }
 })();
 const pieceList = piecesTemp as piece[];
