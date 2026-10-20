@@ -338,7 +338,7 @@ export const generateStateFromFEN = (fen: FENBoard, draft: WritableDraft<State>)
           ...pieceCT,
           key: `im_f_FEN_s_${cC}${rC}` as FENkey,
           coordinate: `${cC}${rC}`,
-          isAlive: true,
+          discardIdx: -1,
         }))
         cIdx+= 1;
       }
@@ -411,12 +411,15 @@ export const generateStateFromFEN = (fen: FENBoard, draft: WritableDraft<State>)
 
   draft.pieceList = pieceMap;
   draft.gridList = gridList;
+  draft.discardIdx = {
+    white: 0,
+    black: 0,
+  };
   draft.curTar = promotion.isPromotion? [{ coordinate: promotion.coor, type: 'self', isPromotion: promotion.isPromotion }] as tar[]: [] as tar[];
   draft.selected = (promotion.coor && gridList[promotion.coor].key) ?? '';
   draft.turn = camp;
   draft.enPassant = enP;
   draft.checkMate = undefined;
-  draft.delKey = '';
 
   draft.halfMove = parseInt(halfMove);
   draft.fullMove = parseInt(fullMove);

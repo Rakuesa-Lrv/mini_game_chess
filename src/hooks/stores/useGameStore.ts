@@ -31,8 +31,6 @@ export interface State {
 
   checkMate: camp | undefined,
 
-  delKey: piece['key'] | '',
-
   halfMove: number,
   fullMove: number,
 

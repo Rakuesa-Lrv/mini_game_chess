@@ -87,11 +87,15 @@ const Chess = ()=> {
                     }
                   }
                   data-hidden={item.discardIdx}
-                  data-selectable={item.discardIdx===-1 && !isPtm && (turn===item.camp || isCapture )}
+                  data-selectable={item.discardIdx===-1 && !promote.isPromotion && (turn===item.camp || isCapture )}
 
                   onMouseDown={()=> {
+                    console.log(item);
+                    console.log(item.discardIdx===-1 );
+                    
+                    
                     item.discardIdx===-1 
-                    && !isPtm && (()=> {
+                    && !promote.isPromotion && (()=> {
                       if(isCapture) {
                         dispatch({ type: 'CAPTURE', to: item.coordinate, selected: key, promotion: { isPromotion: isPtm, from: 'CAPTURE'} });
                         return;
